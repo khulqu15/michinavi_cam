@@ -201,6 +201,7 @@ async function setupWebcam(deviceId) {
         webcam.stop();
     }
     webcam = new tmImage.Webcam(window.innerWidth, window.innerHeight, true);
+    const facingMode = cameraDevices[currentDeviceIndex].label.includes("back") ? "environment" : "user";
     await webcam.setup({ deviceId });
     await webcam.play();
     window.requestAnimationFrame(loop);
