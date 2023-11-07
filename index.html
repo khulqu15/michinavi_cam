@@ -188,7 +188,7 @@ async function init() {
     model = await tmImage.load(modelURL, metadataURL);
     maxPredictions = model.getTotalClasses();
 
-    cameraDevices = (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind === 'videoinput');
+    cameraDevices = (await navigator.mediaDevices.enumerateDevices());
     if (cameraDevices.length === 0) {
         alert("No camera found on this device.");
         return;
