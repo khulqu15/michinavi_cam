@@ -217,23 +217,37 @@ async function setupWebcam(deviceId) {
 }
 
 async function switchCamera() {
-    let newDeviceIndex = currentDeviceIndex;
-    let attempts = cameraDevices.length;
+    // Assuming that cameraDevices[0] is the default camera
+    const isRearCameraNow = currentDeviceIndex !== 0;
+    
+    // Toggle the camera index
+    currentDeviceIndex = (currentDeviceIndex + 1) % cameraDevices.length;
 
-    while (attempts-- > 0) {
-        newDeviceIndex = (newDeviceIndex + 1) % cameraDevices.length;
-        let device = cameraDevices[newDeviceIndex];
-        if (device.label.toLowerCase().includes('back')) {
-            currentDeviceIndex = newDeviceIndex;
-            break;
+    // Stop the current webcam stream
+    if (webcam) {
+        webcam.stop();
+    }
+
+    // Define constraints for the new camera stream
+    const newConstraints = {
+        video: {
+            width: window.innerWidth, // Adjust these values as needed
+            height: window.innerHeight,
+            facingMode: (isRearCameraNow ? "user" : "environment") // Switch between front and back
         }
-    }
-    if (attempts <= 0) {
-        currentDeviceIndex = (currentDeviceIndex + 1) % cameraDevices.length;
-    }
+    };
 
-    const deviceId = cameraDevices[currentDeviceIndex].deviceId;
-    await setupWebcam(deviceId);
+    // Call getUserMedia with the new constraints
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia(newConstraints);
+        webcam.stream = stream; // Update the webcam stream
+        webcam.play();
+        window.requestAnimationFrame(loop);
+        document.getElementById("webcam-container").innerHTML = "";
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+    } catch (error) {
+        console.error('Error switching cameras:', error);
+    }
 }
 
 async function loop() {
