@@ -217,30 +217,24 @@ async function setupWebcam(deviceId) {
 }
 
 async function switchCamera() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-        console.log("This browser does not support the required API");
-        return;
-    }
+    let newDeviceIndex = currentDeviceIndex;
+    let attempts = cameraDevices.length;
 
-    try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-
-        if (videoDevices.length < 2) {
-            console.log("No alternative video input device found.");
-            return;
+    while (attempts-- > 0) {
+        newDeviceIndex = (newDeviceIndex + 1) % cameraDevices.length;
+        let device = cameraDevices[newDeviceIndex];
+        if (device.label.toLowerCase().includes('back')) {
+            currentDeviceIndex = newDeviceIndex;
+            break;
         }
-        const currentDeviceId = webcam && webcam.stream && webcam.stream.getTracks()[0].getSettings().deviceId;
-        let newDeviceIndex = videoDevices.findIndex(device => device.deviceId === currentDeviceId);
-        newDeviceIndex = (newDeviceIndex + 1) % videoDevices.length;
-        
-        const newDeviceId = videoDevices[newDeviceIndex].deviceId;
-        await setupWebcam(newDeviceId);
-    } catch (error) {
-        console.error("Could not switch camera", error);
     }
-}
+    if (attempts <= 0) {
+        currentDeviceIndex = (currentDeviceIndex + 1) % cameraDevices.length;
+    }
 
+    const deviceId = cameraDevices[currentDeviceIndex].deviceId;
+    await setupWebcam(deviceId);
+}
 
 async function loop() {
     webcam.update();
